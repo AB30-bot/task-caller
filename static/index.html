@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Adam's AI is calling you</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .state { display: none; flex-direction: column; align-items: center; text-align: center; gap: 20px; padding: 40px 24px; max-width: 320px; width: 100%; }
+    .state.active { display: flex; }
+    .avatar-wrap { position: relative; }
+    .avatar {
+      width: 72px; height: 72px; border-radius: 50%; background: #1a1a1a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: #fff; font-weight: 500;
+    }
+    .ring {
+      position: absolute; inset: -12px; border-radius: 50%;
+      border: 1.5px solid rgba(26,26,26,0.15);
+      animation: ripple 2s ease-out infinite;
+    }
+    .ring2 {
+      position: absolute; inset: -22px; border-radius: 50%;
+      border: 1px solid rgba(26,26,26,0.07);
+      animation: ripple 2s ease-out 0.7s infinite;
+    }
+    @keyframes ripple { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.4)} }
+    h1 { font-size: 20px; font-weight: 500; line-height: 1.3; }
+    p { font-size: 14px; color: #666; line-height: 1.5; }
+    .btn-primary {
+      width: 100%; padding: 13px; border-radius: 10px;
+      background: #1a7a3c; color: #fff; border: none;
+      font-size: 15px; font-weight: 500; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary svg { width: 18px; height: 18px; fill: #fff; }
+    .btn-secondary {
+      width: 100%; padding: 12px; border-radius: 10px;
+      background: transparent; color: #888; border: 1px solid #e0e0de;
+      font-size: 14px; cursor: pointer;
+    }
+    .disclaimer { font-size: 12px; color: #aaa; }
+    .controls { display: flex; gap: 20px; }
+    .ctrl-btn {
+      width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ctrl-mute { background: #f0f0ee; }
+    .ctrl-mute.muted { background: #faeeda; }
+    .ctrl-mute svg { width: 20px; height: 20px; fill: #1a1a1a; }
+    .ctrl-end { background: #b91c1c; }
+    .ctrl-end svg { width: 20px; height: 20px; fill: #fff; }
+    .timer { font-size: 28px; font-weight: 500; letter-spacing: .02em; }
+    .call-status { font-size: 14px; color: #666; }
+    canvas { border-radius: 4px; }
+    .check-circle {
+      width: 64px; height: 64px; border-radius: 50%; background: #eaf3de;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check-circle svg { width: 28px; height: 28px; fill: #3b6d11; }
+    .duration-card {
+      background: #f8f8f7; border-radius: 10px; padding: 14px 20px;
+      text-align: left; width: 100%;
+    }
+    .duration-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+    .duration-val { font-size: 24px; font-weight: 500; }
+    .error-icon { font-size: 40px; }
+  </style>
+</head>
+<body>
+
+  <!-- Incoming call -->
+  <div id="stateIncoming" class="state active">
+    <div class="avatar-wrap">
+      <div class="ring"></div>
+      <div class="ring2"></div>
+      <div class="avatar">A</div>
+    </div>
+    <div>
+      <h1>Adam's AI is calling</h1>
+      <p id="callContext" style="margin-top: 8px;">Wants to have a quick chat</p>
+    </div>
+    <button class="btn-primary" onclick="startCall()">
+      <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      Answer
+    </button>
+    <button class="btn-secondary" onclick="declineCall()">Decline</button>
+    <p class="disclaimer">This is an AI, not a real person.</p>
+  </div>
+
+  <!-- Connecting -->
+  <div id="stateConnecting" class="state">
+    <div class="avatar"><span>A</span></div>
+    <p>Connecting…</p>
+  </div>
+
+  <!-- Active call -->
+  <div id="stateActive" class="state">
+    <div class="avatar-wrap">
+      <div id="activeRing" class="ring" style="animation: none; opacity: 0;"></div>
+      <div class="avatar">A</div>
+    </div>
+    <div>
+      <div class="call-status" id="callStatus">Listening…</div>
+      <div class="timer" id="callTimer">0:00</div>
+    </div>
+    <!-- iOS Safari may block autoplay; this appears only if remote audio can't start. -->
+    <button id="soundUnlock" onclick="enableSound()" style="display:none;margin:8px 0;padding:10px 18px;border:none;border-radius:999px;background:#1a1a1a;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">
+      🔊 Tap to enable sound
+    </button>
+    <canvas id="viz" width="200" height="40"></canvas>
+    <div class="controls">
+      <button class="ctrl-btn ctrl-mute" id="muteBtn" onclick="toggleMute()" aria-label="Mute">
+        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+      </button>
+      <button class="ctrl-btn ctrl-end" onclick="hangUp()" aria-label="End call">
+        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Post-call -->
+  <div id="stateDone" class="state">
+    <div class="check-circle">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <h1>Thanks for chatting!</h1>
+    <p>Adam will get a summary of your conversation.</p>
+    <div class="duration-card">
+      <div class="duration-label">Call duration</div>
+      <div class="duration-val" id="finalDuration">—</div>
+    </div>
+    <p class="disclaimer">You can close this page.</p>
+  </div>
+
+  <!-- Error -->
+  <div id="stateError" class="state">
+    <div class="error-icon">⚠️</div>
+    <h1>Connection failed</h1>
+    <p id="errorMsg">Something went wrong. Please try the link again.</p>
+  </div>
+
+  <!-- Hidden audio element — the ONLY way to play remote WebRTC audio in Chrome.
+       NOTE: never add a `muted` attribute — it is a boolean attribute, so even
+       muted="false" mutes the element. Leave it off entirely. -->
+  <audio id="remoteAudio" autoplay playsinline></audio>
+
+  <script>
+    const jobId = new URLSearchParams(window.location.search).get('job');
+    let pc = null;
+    let sessionId = null;
+    let timerInterval = null;
+    let startTs = null;
+    let muted = false;
+    let localStream = null;
+    let analyser = null;
+    let rafId = null;
+
+    function setState(id) {
+      ['stateIncoming','stateConnecting','stateActive','stateDone','stateError'].forEach(s => {
+        document.getElementById(s).classList.toggle('active', s === id);
+      });
+    }
+
+    function declineCall() {
+      setState('stateDone');
+      document.getElementById('finalDuration').textContent = '—';
+    }
+
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg || 'Connection failed. Please try again.';
+      setState('stateError');
+    }
+
+    function startTimer() {
+      startTs = Date.now();
+      timerInterval = setInterval(() => {
+        const s = Math.floor((Date.now() - startTs) / 1000);
+        document.getElementById('callTimer').textContent =
+          Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      }, 500);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      if (!startTs) return '0:00';
+      const s = Math.floor((Date.now() - startTs) / 1000);
+      return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }
+
+    function toggleMute() {
+      muted = !muted;
+      if (localStream) localStream.getAudioTracks().forEach(t => { t.enabled = !muted; });
+      document.getElementById('muteBtn').classList.toggle('muted', muted);
+    }
+
+    function hangUp() {
+      const dur = stopTimer();
+      document.getElementById('finalDuration').textContent = dur;
+      if (pc) { pc.close(); pc = null; }
+      cancelAnimationFrame(rafId);
+      setState('stateDone');
+    }
+
+    function drawViz(stream) {
+      // Cosmetic only — never let it throw and break the call (iOS suspends
+      // AudioContext and uses a webkit prefix). Feed the analyser a CLONED track
+      // so Web Audio can't silence the <audio> element (a known Chrome/Edge bug).
+      const track = stream.getAudioTracks()[0];
+      if (!track) return;
+      let ctx, src;
+      try {
+        const vizStream = new MediaStream([track.clone()]);
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        ctx = new Ctx();
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        src = ctx.createMediaStreamSource(vizStream);
+      } catch (e) {
+        return;  // no visualizer on this browser; audio still works
+      }
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      const canvas = document.getElementById('viz');
+      const c = canvas.getContext('2d');
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      function draw() {
+        rafId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(buf);
+        c.clearRect(0, 0, canvas.width, canvas.height);
+        const bw = canvas.width / buf.length;
+        for (let i = 0; i < buf.length; i++) {
+          const h = (buf[i] / 255) * canvas.height;
+          c.fillStyle = 'rgba(26,26,26,0.2)';
+          c.beginPath();
+          if (c.roundRect) c.roundRect(i * bw + 1, (canvas.height - h) / 2, bw - 2, h, 2);
+          else c.rect(i * bw + 1, (canvas.height - h) / 2, bw - 2, h);
+          c.fill();
+        }
+      }
+      draw();
+    }
+
+    function enableSound() {
+      const a = document.getElementById('remoteAudio');
+      a.muted = false;
+      a.play().catch(() => {});
+      document.getElementById('soundUnlock').style.display = 'none';
+    }
+
+    async function startCall() {
+      // iOS Safari only allows audio to start from a user gesture. This runs
+      // synchronously inside the Answer tap (before any await), unlocking the
+      // <audio> element so the later play() in ontrack is permitted.
+      const primeAudio = document.getElementById('remoteAudio');
+      primeAudio.muted = false;
+      primeAudio.play().catch(() => {});
+
+      setState('stateConnecting');
+      try {
+        const startBody = { transport: 'webrtc', enableDefaultIceServers: true };
+        if (jobId) startBody.job_id = jobId;
+
+        const startRes = await fetch('/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(startBody),
+        });
+        if (!startRes.ok) throw new Error('Server error on /start');
+        const startData = await startRes.json();
+        sessionId = startData.sessionId;
+        const iceServers = startData.iceConfig?.iceServers || [];
+
+        pc = new RTCPeerConnection({ iceServers });
+
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        localStream.getAudioTracks().forEach(t => pc.addTrack(t, localStream));
+        pc.createDataChannel('chat', { ordered: true });
+
+        pc.ontrack = e => {
+          if (e.track.kind === 'audio') {
+            const audio = document.getElementById('remoteAudio');
+            audio.srcObject = e.streams[0];
+            audio.muted = false;        // defensive: ensure not muted
+            audio.volume = 1.0;
+            // If iOS still blocks playback, surface the manual unlock button.
+            audio.play().catch(() => {
+              document.getElementById('soundUnlock').style.display = 'inline-block';
+            });
+            drawViz(e.streams[0]);
+          }
+        };
+
+        pc.onconnectionstatechange = () => {
+          if (pc.connectionState === 'connected') {
+            setState('stateActive');
+            startTimer();
+          } else if (['failed','disconnected','closed'].includes(pc.connectionState)) {
+            hangUp();
+          }
+        };
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        await new Promise(resolve => {
+          if (pc.iceGatheringState === 'complete') return resolve();
+          const t = setTimeout(resolve, 3000);
+          pc.onicegatheringstatechange = () => {
+            if (pc.iceGatheringState === 'complete') { clearTimeout(t); resolve(); }
+          };
+        });
+
+        const ansRes = await fetch(`/sessions/${sessionId}/api/offer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sdp: pc.localDescription.sdp, type: pc.localDescription.type }),
+        });
+        if (!ansRes.ok) throw new Error('Offer rejected');
+        const ans = await ansRes.json();
+        await pc.setRemoteDescription(new RTCSessionDescription(ans));
+
+      } catch (e) {
+        console.error(e);
+        showError(e.message);
+      }
+    }
+  </script>
+</body>
+</html>

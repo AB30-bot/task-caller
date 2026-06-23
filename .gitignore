@@ -1,0 +1,40 @@
+# ── Secrets & config (NEVER commit) ───────────────────────────────────────────
+call_config.py
+.env
+*.env
+deploy/.env
+
+# ── WhatsApp gateway session — grants FULL access to the linked account ───────
+openwa/.wwebjs_auth/
+openwa/.wwebjs_cache/
+openwa/qr.png
+
+# ── Runtime data ──────────────────────────────────────────────────────────────
+jobs.db
+jobs.db-journal
+transcripts/
+*.log
+*.out
+*.err
+last_job.txt
+current_url.txt
+qr.png
+
+# ── Internal / personal working files (not for the public repo) ───────────────
+EXECUTE-PROMPT.md
+docs/
+spike/
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+.venv*/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+openwa/node_modules/
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

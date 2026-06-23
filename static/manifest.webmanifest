@@ -1,0 +1,16 @@
+{
+  "name": "Task Caller",
+  "short_name": "Task Caller",
+  "description": "Dispatch AI voice calls to your contacts and get summaries back.",
+  "start_url": "/control",
+  "scope": "/control",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f8f7",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    { "src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

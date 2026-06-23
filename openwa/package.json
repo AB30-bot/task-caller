@@ -1,0 +1,16 @@
+{
+  "name": "openwa-gateway",
+  "version": "1.0.0",
+  "description": "WhatsApp gateway for the Task Caller platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.18.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0"
+  }
+}
