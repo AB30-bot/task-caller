@@ -113,11 +113,11 @@ Open `http://localhost:7860/control`, enter a task + number, hit send.
 | `SUMMARIZER_MODEL` | `models/gemini-2.5-flash` | Text model for the call summary |
 | `MAX_SECONDS` | `300` | Hard call-duration cap |
 | `ADAM_WHATSAPP` | — | Number that receives call summaries |
-| `DEFAULT_COUNTRY_CODE` | `961` | Prepended to bare local numbers typed in the dashboard |
+| `DEFAULT_COUNTRY_CODE` | `1` | Prepended to bare local numbers typed in the dashboard (set to your own in `.env`) |
 | `OPENWA_URL` | `http://localhost:3000` | WhatsApp gateway base URL |
 
 Phone numbers are normalized in `control_app._normalize_contact`: a bare
-`71234567` becomes `+96171234567`; numbers entered with a leading `+`, `00`, or
+`5551234` becomes `+15551234`; numbers entered with a leading `+`, `00`, or
 the country code are kept as-is.
 
 ---
