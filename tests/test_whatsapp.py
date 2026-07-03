@@ -18,7 +18,7 @@ async def test_send_returns_true_on_200():
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with patch("whatsapp.aiohttp.ClientSession", return_value=mock_session):
-        result = await client.send("+96170123456", "Hello!")
+        result = await client.send("+15550142", "Hello!")
     assert result is True
 
 
@@ -26,7 +26,7 @@ async def test_send_returns_true_on_200():
 async def test_send_returns_false_on_connection_error():
     client = WhatsAppClient("http://localhost:3000")
     with patch("whatsapp.aiohttp.ClientSession", side_effect=Exception("connection refused")):
-        result = await client.send("+96170123456", "Hello!")
+        result = await client.send("+15550142", "Hello!")
     assert result is False
 
 
@@ -45,5 +45,5 @@ async def test_send_returns_false_on_non_200():
     mock_session.__aexit__ = AsyncMock(return_value=False)
 
     with patch("whatsapp.aiohttp.ClientSession", return_value=mock_session):
-        result = await client.send("+96170123456", "Hello!")
+        result = await client.send("+15550142", "Hello!")
     assert result is False

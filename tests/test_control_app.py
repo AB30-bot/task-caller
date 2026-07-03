@@ -40,7 +40,7 @@ def test_list_jobs_empty(app_client):
 
 def test_create_job_returns_201(app_client):
     client, _ = app_client
-    r = client.post("/control/jobs", json={"task": "ask how their day went", "contact": "+96170123456"})
+    r = client.post("/control/jobs", json={"task": "ask how their day went", "contact": "+15550142"})
     assert r.status_code == 201
     data = r.json()
     assert data["task"] == "ask how their day went"

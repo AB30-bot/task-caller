@@ -15,10 +15,10 @@ def db():
 
 
 def test_create_job_returns_dict_with_waiting_status(db):
-    job = db.create_job(task="ask how their day went", contact="+96170123456")
+    job = db.create_job(task="ask how their day went", contact="+15550142")
     assert job["status"] == "waiting"
     assert job["task"] == "ask how their day went"
-    assert job["contact"] == "+96170123456"
+    assert job["contact"] == "+15550142"
     assert job["id"]
     assert job["transcript"] is None
 
