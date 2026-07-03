@@ -18,10 +18,10 @@ def init(db, wa, cfg):
     _db, _wa, _cfg = db, wa, cfg
 
 
-def _normalize_contact(raw: str, default_cc: str = "961") -> str:
+def _normalize_contact(raw: str, default_cc: str = "1") -> str:
     """Turn whatever was typed into +<E.164>. A bare local number like
-    '71234567' (or '03 123 456') gets the default country code; '+961…',
-    '00961…' and '961…' are all accepted as-is."""
+    a bare local number (e.g. '5551234') gets the default country code; '+<cc>…',
+    '00<cc>…' and '<cc>…' are all accepted as-is."""
     s = (raw or "").strip()
     digits = re.sub(r"\D", "", s)
     if not digits:
@@ -66,7 +66,7 @@ async def create_job(body: JobCreate):
     if not body.contact.strip():
         raise HTTPException(status_code=422, detail="Contact cannot be empty")
 
-    cc = getattr(_cfg, "DEFAULT_COUNTRY_CODE", "961")
+    cc = getattr(_cfg, "DEFAULT_COUNTRY_CODE", "1")
     contact = _normalize_contact(body.contact, cc)
     job = _db.create_job(task=body.task.strip(), contact=contact)
 

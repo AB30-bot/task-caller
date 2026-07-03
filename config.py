@@ -119,8 +119,8 @@ OPENWA_URL = os.environ.get("OPENWA_URL", "http://localhost:3000")
 ADAM_WHATSAPP = os.environ.get("ADAM_WHATSAPP", "")
 
 # Default country code for bare local numbers typed in the dashboard.
-# So "71234567" becomes "+96171234567" automatically.
-DEFAULT_COUNTRY_CODE = os.environ.get("DEFAULT_COUNTRY_CODE", "961")
+# So a bare local number gets your DEFAULT_COUNTRY_CODE prefix (set in .env).
+DEFAULT_COUNTRY_CODE = os.environ.get("DEFAULT_COUNTRY_CODE", "1")
 
 # SQLite database path
 DB_PATH = os.path.join(os.path.dirname(__file__), "jobs.db")
