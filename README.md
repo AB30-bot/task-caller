@@ -171,3 +171,10 @@ SQLite · Node.js (whatsapp-web.js) · Twilio TURN · Tailscale Funnel
 
 Built by **Adam Barbir**.
 
+
+## Running tests
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
