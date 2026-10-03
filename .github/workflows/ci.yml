@@ -1,0 +1,16 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Tests don't import the realtime stack (pipecat, opencv, ...), so skip the heavy install.
+      - run: pip install fastapi httpx aiohttp loguru google-genai python-dotenv pydantic pytest pytest-asyncio
+      - run: pytest -q

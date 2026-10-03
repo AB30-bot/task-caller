@@ -55,3 +55,11 @@ def test_list_jobs_newest_first(db):
 
 def test_list_jobs_empty(db):
     assert db.list_jobs() == []
+
+
+def test_update_job_rejects_unknown_column(tmp_path):
+    db = Database(str(tmp_path / "t.db"))
+    job = db.create_job("t", "+15550142")
+    with pytest.raises(ValueError):
+        db.update_job(job["id"], **{"status = 'x', task": "boom"})
+    db.close()

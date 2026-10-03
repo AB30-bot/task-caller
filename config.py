@@ -122,6 +122,14 @@ ADAM_WHATSAPP = os.environ.get("ADAM_WHATSAPP", "")
 # So a bare local number gets your DEFAULT_COUNTRY_CODE prefix (set in .env).
 DEFAULT_COUNTRY_CODE = os.environ.get("DEFAULT_COUNTRY_CODE", "1")
 
+# Shared secret protecting the operator dashboard API (/control/*). Strongly
+# recommended whenever the server is reachable from the internet; leave empty
+# only for local development.
+CONTROL_TOKEN = os.environ.get("CONTROL_TOKEN", "")
+
+# A call link works once and expires this many hours after the job is created.
+LINK_TTL_HOURS = float(os.environ.get("LINK_TTL_HOURS", "24"))
+
 # SQLite database path
 DB_PATH = os.path.join(os.path.dirname(__file__), "jobs.db")
 

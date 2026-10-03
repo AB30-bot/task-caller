@@ -53,7 +53,7 @@ from pipecat.transports.smallwebrtc.request_handler import (
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 
 from fastapi import BackgroundTasks, FastAPI, Request
-from fastapi.responses import FileResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pipecat_ai_small_webrtc_prebuilt.frontend import SmallWebRTCPrebuiltUI
 
@@ -432,6 +432,11 @@ async def _startup():
 _active_sessions: dict[str, dict] = {}
 
 
+@app.get("/health", include_in_schema=False)
+async def health():
+    return {"status": "ok"}
+
+
 @app.get("/", include_in_schema=False)
 async def root():
     """Serve the custom branded call page (the friend's tap-a-link landing)."""
@@ -450,6 +455,10 @@ async def start(request: Request):
         data = {}
     session_id = str(uuid.uuid4())
     job_id = data.get("job_id")
+    if job_id:  # a link is single-use and expires; refuse before spending any model time
+        err = control_app.call_link_error(_db.get_job(job_id), config.LINK_TTL_HOURS)
+        if err:
+            return JSONResponse(status_code=err[0], content={"detail": err[1]})
     _active_sessions[session_id] = {"job_id": job_id}
 
     server_ice, client_ice = await get_ice_servers()
@@ -526,6 +535,8 @@ def main():
     if not config.GEMINI_API_KEY:
         logger.error("GEMINI_API_KEY is empty — set it or fix call_config.py path.")
         sys.exit(1)
+    if not config.CONTROL_TOKEN:
+        logger.warning("CONTROL_TOKEN is not set — /control is open to anyone who can reach this server.")
     logger.info(f"Brain model: {config.MODEL}  voice: {config.VOICE}  cap: {config.MAX_SECONDS}s")
     logger.info(f"Open http://localhost:{config.PORT}")
     import uvicorn

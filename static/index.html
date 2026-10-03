@@ -276,7 +276,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(startBody),
         });
-        if (!startRes.ok) throw new Error('Server error on /start');
+        if (!startRes.ok) {
+          const err = await startRes.json().catch(() => ({}));
+          throw new Error(err.detail || 'Server error on /start');
+        }
         const startData = await startRes.json();
         sessionId = startData.sessionId;
         const iceServers = startData.iceConfig?.iceServers || [];

@@ -3,10 +3,17 @@ import uuid
 from datetime import datetime, timezone
 
 
+_JOB_COLUMNS = {
+    "task", "contact", "status", "link_sent_at",
+    "call_started_at", "call_ended_at", "transcript", "summary",
+}
+
+
 class Database:
     def __init__(self, path: str):
         self._conn = sqlite3.connect(path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA journal_mode=WAL")  # dashboard polls while calls write
         self._migrate()
 
     def _migrate(self):
@@ -49,6 +56,9 @@ class Database:
     def update_job(self, job_id: str, **kwargs) -> None:
         if not kwargs:
             return
+        unknown = set(kwargs) - _JOB_COLUMNS
+        if unknown:
+            raise ValueError(f"Unknown job column(s): {sorted(unknown)}")
         sets = ", ".join(f"{k} = ?" for k in kwargs)
         vals = list(kwargs.values()) + [job_id]
         self._conn.execute(f"UPDATE jobs SET {sets} WHERE id = ?", vals)

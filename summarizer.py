@@ -23,7 +23,7 @@ async def summarize(
     task: str,
     transcript: str,
     api_key: str,
-    model: str = "gemini-2.0-flash",
+    model: str = "gemini-2.5-flash",
 ) -> str:
     """Summarize a call transcript in the context of the task. Never raises."""
     try:
