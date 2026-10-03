@@ -158,9 +158,38 @@
 
     function toggle(id) { expanded = expanded === id ? null : id; renderJobs(); }
 
+    // Dashboard token (CONTROL_TOKEN on the server). Open /control?token=... once; it is
+    // remembered in this browser and stripped from the address bar.
+    function getToken() {
+      const url = new URL(location.href);
+      const t = url.searchParams.get('token');
+      if (t) {
+        try { localStorage.setItem('controlToken', t); } catch (_) {}
+        url.searchParams.delete('token');
+        history.replaceState(null, '', url);
+      }
+      try { return localStorage.getItem('controlToken') || ''; } catch (_) { return ''; }
+    }
+
+    async function api(path, opts = {}) {
+      const headers = { ...(opts.headers || {}) };
+      const token = getToken();
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      let r = await fetch(path, { ...opts, headers });
+      if (r.status === 401) {
+        const entered = prompt('Dashboard access token:');
+        if (entered) {
+          try { localStorage.setItem('controlToken', entered); } catch (_) {}
+          headers['Authorization'] = 'Bearer ' + entered;
+          r = await fetch(path, { ...opts, headers });
+        }
+      }
+      return r;
+    }
+
     async function loadJobs() {
       try {
-        const r = await fetch('/control/jobs');
+        const r = await api('/control/jobs');
         if (r.ok) { jobs = await r.json(); renderJobs(); }
       } catch (_) {}
     }
@@ -172,7 +201,7 @@
       const btn = document.getElementById('sendBtn');
       btn.disabled = true;
       try {
-        const r = await fetch('/control/jobs', {
+        const r = await api('/control/jobs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ task, contact }),
@@ -180,7 +209,8 @@
         if (r.ok) {
           document.getElementById('taskInput').value = '';
           document.getElementById('contactInput').value = '';
-          showToast('Link sent via WhatsApp!');
+          const job = await r.json();
+          showToast(job.link_sent_at ? 'Link sent via WhatsApp!' : 'Job saved, but WhatsApp send failed — check the gateway.');
           await loadJobs();
         } else {
           const err = await r.json().catch(() => ({}));

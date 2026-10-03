@@ -171,3 +171,20 @@ SQLite · Node.js (whatsapp-web.js) · Twilio TURN · Tailscale Funnel
 
 Built by **Adam Barbir**.
 
+
+## Security & call links
+
+- **Dashboard auth** — set `CONTROL_TOKEN` (any long random string) in `.env`. The `/control/*`
+  API then requires it; open `/control?token=<your-token>` once per browser and it is remembered.
+  Without a token the dashboard is open to anyone who can reach the server (the server logs a warning).
+- **Call links are single-use and expire** after `LINK_TTL_HOURS` (default 24). A used or expired link
+  shows a clear message instead of starting a call. If the WhatsApp send failed, resend with
+  `POST /control/jobs/<id>/resend`.
+- `GET /health` returns `{"status": "ok"}` for uptime checks.
+
+## Running tests
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
